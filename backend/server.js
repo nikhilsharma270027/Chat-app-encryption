@@ -8,6 +8,7 @@ import mongoose from "mongoose";
 import { nanoid } from 'nanoid';
 import bcrypt from 'bcrypt'
 import User from './Schemas/User.js';
+import chatRoute from "./routes/chatRoute.js";
 let PORT = 3000;
 const uri = "mongodb+srv://nikhil:nikhil@chatapp.cwjik.mongodb.net/?retryWrites=true&w=majority&appName=chatapp";
 
@@ -150,20 +151,35 @@ app.post('/signin', async (req, res) => {
   })
 });
 
-app.get('/messages', async (req, res) => {
-  try {
-      const { sender, receiver } = req.query;
-      const messages = await Message.find({
-          $or: [
-              { sender, receiver },
-              { sender: receiver, receiver: sender },
-          ],
-      }).sort({ timestamp: 1 }); // Sort by timestamp in ascending order
-      res.status(200).json(messages);
-  } catch (err) {
-      res.status(500).json({ error: err.message });
-  }
+// app.get('/messages', async (req, res) => {
+//   try {
+//     const { sender, receiver } = req.query;
+//     if (!sender || !receiver) return res.status(400).json({ error: "Missing sender or receiver" });
+
+//     const messages = await Message.find({
+//       $or: [{ sender, receiver }, { sender: receiver, receiver: sender }],
+//     }).sort({ timestamp: 1 });
+
+//     res.status(200).json(messages);
+//   } catch (err) {
+//     console.error("Error fetching messages:", err);
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+
+
+app.get("/getuser",async (req, res) => {
+    try {
+      const users = await User.find();
+
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({message: `No user found`})
+    }
 });
+
+
+
 
 
 // Socket.IO connection
@@ -179,34 +195,56 @@ app.get('/messages', async (req, res) => {
 //   });
 // });
 
-
-io.on('connection', (socket) => {
-  console.log('a user connected');
-
-  // Join a room for the user (using their username or user ID)
-  socket.on('join', (username) => {
-      socket.join(username);
-      console.log(`${username} joined the chat`);
+io.on("connection", (socket) => {
+  console.log("Connection to Socket.io");
+  socket.on("setup", (userData) => {
+      socket.join(userData._id);
+      console.log("User joined", userData.name)
+      socket.emit("connected");
   });
 
-  // Handle private messages
-  socket.on('private message', async ({ sender, receiver, message }) => {
-      const newMessage = new Message({ sender, receiver, message });
-      await newMessage.save();
+  // New Message triggered
 
-      // Emit the message to the receiver's room
-      io.to(receiver).emit('private message', newMessage);
-
-      // Also emit the message to the sender (optional)
-      io.to(sender).emit('private message', newMessage);
-  });
-
-  socket.on('disconnect', () => {
-      console.log('user disconnected');
-  });
-});
+  // socket.on()
 
 
+})
+
+
+// io.on("connection", (socket) => {
+//   console.log("A user connected");
+
+//   socket.on("private message", async (msg) => {
+//     try {
+//       const { sender, receiver, message } = msg;
+//       const participants = [sender, receiver].sort(); // Ensure order
+
+//       // Find the conversation
+//       let conversation = await Conversation.findOne({ participants });
+
+//       if (!conversation) {
+//         // Create a new conversation if it doesn't exist
+//         conversation = new Conversation({ participants, messages: [] });
+//       }
+
+//       // Add new message
+//       conversation.messages.push({ sender, message, timestamp: new Date() });
+//       conversation.updatedAt = new Date(); // Update last modified time
+//       await conversation.save();
+
+//       // Emit message to receiver
+//       io.to(receiver).emit("private message", msg);
+//     } catch (error) {
+//       console.error("Error saving message:", error);
+//     }
+//   });
+
+//   socket.on("disconnect", () => {
+//     console.log("User disconnected");
+//   });
+// });
+
+app.use("/api/chat", chatRoute);
 
 app.use((error, req, res, next) => {
   const status = error.status || 500;

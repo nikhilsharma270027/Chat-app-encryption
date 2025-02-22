@@ -6,6 +6,7 @@ import './index.css'
 // import './output.css '
 import './App.css'
 import { lookInSession } from "./common/session";
+import WhatsAppLayout from "./pages/WhatsappLayout";
 
 export const UserContext = createContext({});
 
@@ -28,8 +29,9 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Home />} />
 
-          <Route path="signin" element={<UserAuthForm type="sign-in"/>}/>
-                <Route path="signup" element={<UserAuthForm type="sign-up"/>}/>
+          <Route path="/whatsapp" element={<WhatsAppLayout />}/>
+          <Route path="/signin" element={<UserAuthForm type="sign-in"/>}/>
+                <Route path="/signup" element={<UserAuthForm type="sign-up"/>}/>
         </Routes>
       </UserContext.Provider>
     </BrowserRouter>

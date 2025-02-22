@@ -1,142 +1,129 @@
-import React, { useState, useEffect, useContext } from 'react';
-import io from 'socket.io-client';
-import axios from 'axios';
-import { UserContext } from '../App';
-
-const socket = io('http://localhost:3000');
+import React, { useContext, useEffect, useRef, useState } from "react";
+import io, { Socket } from "socket.io-client";
+import axios from "axios";
+import { UserContext } from "../App"
+import AllUser from "../components/AllUser";
 
 interface Message {
   sender: string;
   receiver: string;
   message: string;
-  timestamp: Date;
+  timestamp: string;
 }
 
-interface Usercontext {
-  userAuth : any;
-}
-
-function ChatPage() {
-  const { userAuth }: any = useContext(UserContext);
-  const [message, setMessage] = useState('');
+const ChatPage: React.FC = () => {
+  const { userAuth } = useContext(UserContext) as { userAuth: { username: string; profile_img: string } };
+  const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
-  const [receiver, setReceiver] = useState(''); // Username of the receiver
+  const [receiver, setReceiver] = useState<string>("");
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
+  const socketRef = useRef<Socket | null>(null);
 
-  // Join the user's room when they log in
   useEffect(() => {
-    if (userAuth.username) {
-      socket.emit('join', userAuth.username);
+    const socket = io("http://localhost:3000"); // Connect to WebSocket server
+    socketRef.current = socket;
+  
+    socket.on("connect", () => console.log("Connected to server"));
+  
+    socket.on("private message", (msg: Message) => {
+      setMessages((prev) => [...prev, msg]); // Update messages in real-time
+    });
+  
+    socket.on("disconnect", () => console.log("Disconnected"));
+  
+    return () => {
+      socket.disconnect(); // Cleanup socket on unmount
+    };
+  }, []);
+  
+
+  useEffect(() => {
+    if (userAuth?.username && socketRef.current) {
+      socketRef.current.emit("join", userAuth.username);
     }
   }, [userAuth]);
 
-  // Listen for private messages
-  useEffect(() => {
-    socket.on('private message', (msg: Message) => {
-      setMessages((prevMessages) => [...prevMessages, msg]);
-    });
-
-    return () => {
-      socket.off('private message');
-    };
-  }, []);
-
-  // Fetch chat history when the receiver changes
   useEffect(() => {
     if (receiver) {
       axios
-        .get('/messages', {
+        .get<Message[]>("http://localhost:3000/conversation", {
           params: { sender: userAuth.username, receiver },
         })
-        .then((response) => {
-          setChatHistory(response.data);
-        })
-        .catch((error) => {
-          console.error('Error fetching chat history:', error);
-        });
+        .then((res) => setChatHistory(res.data || [])) // Store messages in state
+        .catch(() => setChatHistory([]));
     }
-  }, [receiver]);
+  }, [receiver, userAuth.username]);
+  
 
-  // Send a private message
   const sendMessage = () => {
-    if (message.trim() && receiver.trim()) {
-      const newMessage = {
+    if (message.trim() && receiver.trim() && socketRef.current) {
+      const newMessage: Message = {
         sender: userAuth.username,
         receiver,
         message,
-        timestamp: new Date(),
+        timestamp: new Date().toISOString(),
       };
-      socket.emit('private message', newMessage);
-      setMessage('');
+      socketRef.current.emit("private message", newMessage);
+      setMessages((prev) => [...prev, newMessage]);
+      setMessage("");
     }
   };
 
+  const allMessages = [...chatHistory, ...messages].sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
+
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
-      {/* Chat Header */}
-      <div className="p-4 bg-blue-600 text-white">
-        <h1 className="text-xl font-bold">Chat with {receiver}</h1>
+    <div className="flex h-screen bg-[#f5e7d3] overflow-hidden">
+      <div className="h-screen w-[7%] flex flex-col justify-between">
+        <div className="flex justify-center items-center flex-col">
+          <img className="p-2 w-20 rounded-full" src={userAuth.profile_img} alt="Profile" />
+        </div>
       </div>
 
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-white border-b border-gray-300">
-        {chatHistory.map((msg, index) => (
-          <div
-            key={index}
-            className={`p-2 rounded-lg max-w-xs ${
-              msg.sender === userAuth.username
-                ? 'bg-blue-500 text-white ml-auto'
-                : 'bg-gray-200 text-black mr-auto'
-            }`}
-          >
-            <p>{msg.message}</p>
-            <span className="text-xs text-gray-500">
-              {new Date(msg.timestamp).toLocaleTimeString()}
-            </span>
-          </div>
-        ))}
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`p-2 rounded-lg max-w-xs ${
-              msg.sender === userAuth.username
-                ? 'bg-blue-500 text-white ml-auto'
-                : 'bg-gray-200 text-black mr-auto'
-            }`}
-          >
-            <p>{msg.message}</p>
-            <span className="text-xs text-gray-500">
-              {new Date(msg.timestamp).toLocaleTimeString()}
-            </span>
-          </div>
-        ))}
+      <div className="h-screen w-2/6 bg-white flex flex-col overflow-hidden">
+        <div className="h-16 px-5 py-5 text-2xl font-sans bg-black text-white">Whatsapp</div>
+        <div className="flex-1 w-full overflow-y-auto">
+          <AllUser setReceiver={setReceiver} />
+        </div>
       </div>
 
-      {/* Chat Input */}
-      <div className="flex items-center p-4 bg-gray-200 border-t border-gray-300">
-        <input
-          type="text"
-          value={receiver}
-          onChange={(e) => setReceiver(e.target.value)}
-          className="flex-1 p-2 border border-gray-400 rounded-lg mr-2 focus:outline-none"
-          placeholder="Enter receiver's username..."
-        />
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          className="flex-1 p-2 border border-gray-400 rounded-lg mr-2 focus:outline-none"
-          placeholder="Type a message..."
-        />
-        <button
-          onClick={sendMessage}
-          className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          Send
-        </button>
+      <div className="h-screen flex-1 bg-gray-200 flex flex-col">
+        {receiver ? (
+          <>
+            <div className="h-16 px-5 py-5 bg-white shadow-md flex items-center">
+              <h2 className="text-xl font-bold">@{receiver}</h2>
+            </div>
+
+            <div className="flex-1 p-5 overflow-y-auto">
+              {allMessages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`p-2 my-2 ${msg.sender === userAuth.username ? "text-right" : "text-left"}`}
+                >
+                  <p className="inline-block p-3 rounded-lg bg-white shadow-md">{msg.message}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="h-16 px-5 bg-white flex items-center shadow-md">
+              <input
+                className="flex-1 p-3 border rounded-md"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Type a message..."
+              />
+              <button className="ml-2 px-4 py-2 bg-blue-500 text-black rounded-md" onClick={sendMessage}>
+                Send
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center justify-center flex-1 text-gray-500">Select a user to start chatting</div>
+        )}
       </div>
     </div>
   );
-}
+};
 
 export default ChatPage;

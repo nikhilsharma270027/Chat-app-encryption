@@ -119,9 +119,42 @@
 .ce-block__content, .ce-toolbar__content{
     max-width: 900px;
 }
+.scrollbar-auto {
+    scrollbar-width: auto;
+    background-color: lightgreen;
+    height: 150px;
+    width: 200px;
+    overflow-y: scroll;
+}
 
 .cdx-settings-button[data-tune='withBorder'],
 .cdx-settings-button[data-tune='withBackground'],
 .cdx-settings-button[data-tune='stretched'] {
   display: none;
 }
+
+@layer base {
+  :root {
+        --radius: 0.5rem;
+    }
+}
+
+/* Webkit-based browsers (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+    width: 6px; /* Thin scrollbar */
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1; /* Light gray background */
+    border-radius: 10px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #888; /* Darker thumb */
+    border-radius: 10px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555; /* Slightly darker on hover */
+  }
+  
