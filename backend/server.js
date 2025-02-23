@@ -9,6 +9,8 @@ import { nanoid } from 'nanoid';
 import bcrypt from 'bcrypt'
 import User from './Schemas/User.js';
 import chatRoute from "./routes/chatRoute.js";
+import path from "path";
+import { fileURLToPath } from "url";
 let PORT = 3000;
 const uri = "mongodb+srv://nikhil:nikhil@chatapp.cwjik.mongodb.net/?retryWrites=true&w=majority&appName=chatapp";
 
@@ -17,7 +19,12 @@ const server = http.createServer(app);
 // -----------------------------------------------------------------------
 app.use(express.json()); // ✅ Ensure this is BEFORE defining routes
 app.use(express.urlencoded({ extended: true })); // ✅ Helps handle form data (optional)
+// Define __dirname for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+// Use __dirname correctly
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // CORS configuration
 const corsOptions = {
   origin: process.env.FRONTEND_URL || "http://localhost:5173", // Replace with your frontend domain

@@ -1,6 +1,6 @@
-import User from "../Schemas/User";
+import User from "../Schemas/User.js";
 
-export default searchUser = async (req, res) => {
+const searchUser = async (req, res) => {
   try {
     const keyword = req.query.search
       ? {
@@ -23,3 +23,5 @@ export default searchUser = async (req, res) => {
     return res.status(500).json({ message: "Internal Serber Error" });
   }
 };
+
+export default searchUser;

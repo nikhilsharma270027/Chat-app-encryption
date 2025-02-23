@@ -39,4 +39,4 @@ const chatBoxSchema = mongoose.Schema(
   );
   
   const chatBox = mongoose.model("chat", chatBoxSchema);
-  module.exports = chatBox;
+  export default {chatBox};

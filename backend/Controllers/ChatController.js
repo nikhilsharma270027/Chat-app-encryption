@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import Message from "../Schemas/Message.js";
-import Chat from "../Schemas/chat-box.js";
-import { populate } from "dotenv";
+import ChatBox from "../Schemas/chat-box.js";
 import User from "../Schemas/User.js";
 
 export const saveMessage = async (req, res) => {
@@ -277,11 +276,13 @@ export const addUser = async (req, res) => {
         const { chatId, usersId } = req.body;
         let group = await Chat.findById(chatId);
 
-        usersId.map((users) => {
-            let index = group.users.indexOf({ user: users.user, unseenMsg: 0});
-
-            group.users,push({ user: users.user, unseenMsg: 0});
-        })
+        usersId.forEach((user) => {
+          let index = group.users.findIndex(member => member.user.toString() === user.user);
+          
+          if (index === -1) { // If user is not already in the group
+              group.users.push({ user: user.user, unseenMsg: 0 });
+          }
+      });
          await group.save();
 
          return res.send()
@@ -315,12 +316,52 @@ export const changePic = async (req, res) => {
 }
 
 // to update count of unseen messages //
-// export const countUnseenMssge = async (req, res) => {
-//     try {
-//         const { chatId, userId } = req.query;
+export const countUnseenMssge = async (req, res) => {
+    try {
+        const { chatId, userId } = req.query;
 
-//         let chat = 
-//     } catch (error) {
-        
-//     }
-// }
+        let chat = await Chat.findById(chatId).populate({
+          path: "users",
+          populate: {
+            path: "user",
+          },
+        });
+
+        chat.users.forEach((members) => {
+          if(members.user._id == userId) {
+            members.unseenMsg = 0;
+          }
+        })
+
+        await chat.save();
+        return res.send(chat.users);
+    } catch (error) {
+      console.error(error.message);
+      res.status(200).send("Internal Server Error");
+    }
+}
+
+//to add count of unseen messages //
+export const addCount = async (chatId, userId) => {
+  try {
+    let chat = await  Chat.findById(chatId).populate({
+      path: "users",
+      populate: {
+        path: "user",
+      },
+    });
+    
+    chat.users.forEach((members) => {
+      if(members.user._id == userId) {
+        members.unseenMsg = members.unseenMsg + 1;
+      }
+    });
+
+    await chat.save();
+    return chat.users;
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+// to get mutual groups
