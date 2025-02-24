@@ -5,7 +5,7 @@ import { toaster } from "@/components/ui/toaster"
 
 const url = import.meta.env.VITE_SERVER_DOMAIN;
 
-const ChatState = ({ children }: { children: ReactNode }) => {
+const ChatState = (props: any) => {
     const [logUser, setlogUser] = useState<any>({});
     const [chatroom, setchatroom] = useState<any>({});
     const [recentChats, setrecentChats] = useState<any[]>([]);
@@ -148,7 +148,7 @@ const ChatState = ({ children }: { children: ReactNode }) => {
             groupName,
             chatlistLoading,
         }}>
-            {children}
+            {props.children}
         </ChatContext.Provider>
     );
 };

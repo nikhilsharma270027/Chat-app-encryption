@@ -1,10 +1,10 @@
 // import React from 'react'
-import FrontPage from '../components/FrontPage'
+import List from '@/components/List'
 
 const Home = () => {
   return (
     <div>
-      <FrontPage />
+      <List />
     </div>
   )
 }

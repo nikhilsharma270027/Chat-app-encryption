@@ -24,7 +24,29 @@ interface ChatContextType {
   chatlistLoading: boolean;
 }
 
-// Set default values properly
-const ChatContext = createContext<ChatContextType | null>(null);
+// ✅ Provide default empty values
+const ChatContext = createContext<ChatContextType>({
+  groupMessages: [],
+  setgroupMessages: () => {},
+  groupMembers: [],
+  setgroupMembers: () => {},
+  loading: false,
+  setloading: () => {},
+  setrecentChats: () => {},
+  recentChats: [],
+  fetchRecentChats: async () => {},
+  logUser: {},
+  setlogUser: () => {},
+  accessChat: async () => ({}),
+  chatroom: {},
+  accessGroupChat: async () => ({}),
+  setchatroom: () => {},
+  createNoty: async () => ({}),
+  setgroupPic: () => {},
+  groupPic: "",
+  setgroupName: () => {},
+  groupName: "",
+  chatlistLoading: false,
+});
 
 export default ChatContext;

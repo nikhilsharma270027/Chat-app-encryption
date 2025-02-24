@@ -157,4 +157,64 @@
   ::-webkit-scrollbar-thumb:hover {
     background: #555; /* Slightly darker on hover */
   }
-  
+  @layer components {
+    .check{
+        @apply border-2 border-yellow-500
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
+
+    
+
+    .inputFile::before{
+        color: white;
+        content: "Upload photo";
+        padding-left: 16px;
+        font-size: 0.9rem;
+    }
+
+    
+
+    
+
+    .inputFile::-webkit-file-upload-button{
+         visibility: hidden;
+    }
+
+
+}   
+
+.chatBox::-webkit-scrollbar{
+    display: none;
+}
+
+.chatBox{
+    scrollbar-width: none;   
+}
+
+
+/* Scrollbar styling */
+
+/* Works on Firefox */
+.styleScroll{
+	scrollbar-width: thin;
+	scrollbar-color: rgb(70, 70, 70) auto;
+}
+
+/* Works on Chrome, Edge, and Safari */
+.styleScroll::-webkit-scrollbar {
+	width: 7px;
+}
+
+.styleScroll::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.styleScroll::-webkit-scrollbar-thumb {
+	background-color:rgb(104, 104, 104);
+    border-radius: 10px;
+}
+
+/* End scrollbar styling*/

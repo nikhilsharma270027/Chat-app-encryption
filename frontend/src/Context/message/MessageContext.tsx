@@ -1,5 +1,13 @@
 import { createContext } from "react";
 
-const MessageContext = createContext("");
+interface MessageContextType {
+  encryption: (message: string) => string;
+  decryption: (message: string) => string;
+}
+
+const MessageContext = createContext<MessageContextType>({
+  encryption: () => "", // Default empty function
+  decryption: () => "",
+});
 
 export default MessageContext;
