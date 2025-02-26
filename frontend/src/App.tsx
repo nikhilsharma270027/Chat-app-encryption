@@ -6,6 +6,7 @@ import './index.css'
 // import './output.css '
 import './App.css'
 import { lookInSession } from "./common/session";
+import ChatPage from "./pages/ChatPage";
 
 export const UserContext = createContext({});
 
@@ -27,6 +28,7 @@ const App = () => {
       <UserContext.Provider value={{ userAuth, setUserAuth }}>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/chat" element={<ChatPage />} />
 
           <Route path="/signin" element={<UserAuthForm type="sign-in"/>}/>
                 <Route path="/signup" element={<UserAuthForm type="sign-up"/>}/>

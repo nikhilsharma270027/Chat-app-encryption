@@ -1,177 +1,159 @@
-// import React, { useContext, useState, useEffect, useRef } from "react";
-// import ChatContext from "../context/chat/ChatContext";
-// import Profile from "./Profile";
-// import GroupCreation from "./GroupCreation";
-// import {
-//   Drawer,
-//   DrawerBody,
-//   DrawerHeader,
-//   DrawerOverlay,
-//   DrawerContent,
-//   useDisclosure,
-//   Spinner,
-//   useToast,
-// } from "@chakra-ui/react";
-// const url = process.env.REACT_APP_URL;
+import React, { useRef} from "react";
+import ChatContext from "@/Context/chat/ChatContext";
+import { useContext, useState } from "react";
+import { toaster } from "./ui/toaster";
+import { Drawer, useDisclosure } from "@chakra-ui/react";
+// const { setOpen,onClose, onOpen, open } = useDisclosure();
+import {
+  DrawerBackdrop,
+  DrawerBody,
+  DrawerCloseTrigger,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerRoot,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
+import axios from "axios";
 
-// export default function Navbar(props) {
-//   const context = useContext(ChatContext);
-//   const { accessChat } = context;
-//   const { isOpen, onOpen, onClose } = useDisclosure();
-//   const { socket, toggleSearch, settoggleSearch } = props;
-//   const btnRef = React.useRef();
-//   const [loading, setloading] = useState(false);
-//   const [search, setsearch] = useState("");
-//   const [users, setusers] = useState([]);
-//   const [result, setresult] = useState(true);
-//   const toast = useToast();
-//   let ref = useRef();
+export default function NavBar(props: any) {
+  const [open, setOpen] = useState(false)
+  const context = useContext(ChatContext);
+  const { accessChat } = context;
+  // const btnRef = React.useRef("");
+  const { socket } = props;
+  const [loading, setloading] = useState(false);
+  const [users, setusers] = useState([]);
+  const [search, setsearch] = useState("");
+  const [result, setResult] = useState(false);
 
-//   //enabling drawer from chatlist //
-//   const enableDrawer = () => {
-//     if (toggleSearch) {
-//       onOpen();
-//     }
-//   };
+  // const toast = toaster();
 
-//   ref.current = enableDrawer;
-//   useEffect(() => {
-//     ref.current();
-//   }, [toggleSearch]);
+  //enabling drawer from chatlist //
+  //  const enableDrawer = () => {
+  //     if(toggleSearch) {
+  //         onOpen();
+  //     }
+  
+  const onChange = async (e: any) => {
+    try{
+      setloading(true);
+      setsearch(e.target.value);
+      const token = localStorage.getItem("token"); // Ensure this exists
 
-//   const onChange = async (e) => {
-//     try {
-//       setloading(true);
-//       setsearch(e.target.value);
-//       let token = localStorage.getItem("token");
-//       const response = await fetch(
-//         `${url}/api/chat/searchUser?search=${e.target.value}`,
-//         {
-//           method: "GET",
-//           mode: "cors",
-//           headers: {
-//             "Content-Type": "application/json",
-//             "auth-token": token,
-//           },
-//         }
-//       );
+      const response = await axios.get(
+        `${import.meta.env.VITE_SERVER_DOMAIN}/api/chat/searchUser?search=${e.target.value}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}` // Ensure "Bearer" is properly formatted
+          }
+        }
+      );
 
-//       let userrs = await response.json();
-//       setloading(false);
-//       if (!userrs.length) {
-//         setresult(false);
-//       } else {
-//         setusers(userrs);
-//         setresult(true);
-//       }
 
-//       if (!e.target.value) {
-//         setusers([]);
-//       }
-//     } catch (error) {
-//       setloading(false);
-//       toast({
-//         description: "Internal server error",
-//         status: "warning",
-//         duration: 3000,
-//         isClosable: true,
-//       });
-//     }
-//   };
+      setloading(false);
+      console.log("fecthing users", response.data)
+      setusers((await response).data)
+      if( response) {
+        setResult(true)
+      } else {
+        setResult(false)
+      }
 
-//   const closeTheTab = () => {
-//     onClose();
-//     setusers([]);
-//     setsearch("");
-//     setloading(false);
-//     setresult(true);
-//     settoggleSearch(false);
-//   };
+      if(!e.target.value) {
+        setusers([]);
+      }
+    } catch (error) {
+      setloading(false);
+      toaster.create({
+        description: "Internal server error",
+        type: "warning",
+        duration: 3000,
+      });
+    }
+  }
 
-//   return (
-//     <nav className="  hidden md:flex  items-center justify-center w-20  xl:w-[6%]   py-10 text-white  bg-[rgb(27,27,27)] ">
-//       <div className="bg-[rgb(36,36,36)]  w-14 space-y-4 pb-5 pt-2 rounded-lg flex flex-col  items-center justify-center">
-//         <img
-//           alt=""
-//           className="w-10  "
-//           src={
-//             "https://res.cloudinary.com/dynjwlpl3/image/upload/v1674985284/Chat-app/logo_rmgpil.png"
-//           }
-//         ></img>
-//         <i
-//           title="Search"
-//           onClick={onOpen}
-//           className=" text-[rgb(111,111,111)]  text-xl cursor-pointer fa-solid fa-magnifying-glass"
-//         ></i>
-//         <Drawer
-//           isOpen={isOpen}
-//           placement="left"
-//           onClose={closeTheTab}
-//           finalFocusRef={btnRef}
-//         >
-//           <DrawerOverlay />
-//           <DrawerContent
-//             overflow={"hidden"}
-//             bg={"rgb(27,27,27)"}
-//             color={"white"}
-//           >
-//             <DrawerHeader bg={"rgb(36,36,36)"}>
-//               <div className="flex justify-between">
-//                 Search for user
-//                 <i
-//                   onClick={closeTheTab}
-//                   className="fa-solid cursor-pointer text-xl mt-[1px] fa-xmark"
-//                 ></i>
-//               </div>
-//             </DrawerHeader>
-//             <DrawerBody padding={"0"} position="relative" overflow={"hidden"}>
-//               <input
-//                 onChange={onChange}
-//                 value={search}
-//                 className=" mx-4 mt-6 border-[rgb(156,150,150)] px-4 outline-none w-[17rem] py-2
-//                     rounded-lg border-2  bg-transparent text-white"
-//                 placeholder="Enter names or email address"
-//                 autoComplete="off"
-//               ></input>
-//               {loading && (
-//                 <div className="h-96  flex justify-center items-center">
-//                   <Spinner />
-//                 </div>
-//               )}
-//               {!loading && result && (
-//                 <div className="flex h-[73vh]  pb-1check overflow-y-scroll styleScroll mt-6 flex-col ">
-//                   {users.map((user) => {
-//                     return (
-//                       <div
-//                         onClick={() => {
-//                           accessChat(user._id);
-//                           closeTheTab();
-//                         }}
-//                         className="flex cursor-pointer px-4 hover:bg-[rgb(58,58,58)]  py-[6px]  items-center space-x-2"
-//                         key={user._id}
-//                       >
-//                         <img
-//                           className="w-12 rounded-full h-12"
-//                           alt=""
-//                           src={user.avtar}
-//                         ></img>
-//                         <p>{user.name}</p>
-//                       </div>
-//                     );
-//                   })}
-//                 </div>
-//               )}
-//               {!result && !loading && (
-//                 <div className="text-white h-[70vh] top-0 mx-20  absolute flex justify-center items-center">
-//                   No result found
-//                 </div>
-//               )}
-//             </DrawerBody>
-//           </DrawerContent>
-//         </Drawer>
-//         <GroupCreation socket={socket} />
-//         <Profile />
-//       </div>
-//     </nav>
-//   );
-// }
+  return (
+    <nav className="  hidden md:flex  items-center justify-center w-20  xl:w-[6%]   py-10 text-white  bg-[#B3D8A8] ">
+      <div className="bg-[rgb(36,36,36)]  w-14 space-y-4 pb-5 pt-2 rounded-lg flex flex-col  items-center justify-center">
+        <img
+          alt=""
+          className="w-10  "
+          src={
+            "https://res.cloudinary.com/dynjwlpl3/image/upload/v1674985284/Chat-app/logo_rmgpil.png"
+          }></img>
+        <i
+          title="Search"
+          onClick={() => setOpen(true)}
+          className=" text-[rgb(111,111,111)]  text-xl cursor-pointer fa-solid fa-magnifying-glass"></i>
+        <DrawerRoot 
+            open={open}
+            placement={"start"}
+            onOpenChange={(e) => setOpen(e.open)}
+            // finalFocusRef={btnRef}
+          >
+            <DrawerBackdrop overflow={"hidden"}
+            bg={"rgb(27,27,27)"}
+            color={"white"}/>
+            <DrawerTrigger />
+            <DrawerContent overflow={"hidden"}  bg={"rgb(27,27,27)"} color={"white"}>
+              {/* <DrawerCloseTrigger onClick={() => setOpen((prev) => !prev)}/> */}
+              <DrawerHeader bg={"rgb(36,36,36)"}>
+              <div className="flex justify-between p-5 align-middle">
+                Search for user
+                <i
+                  onClick={() => setOpen((prev) => !prev)}
+                  className="fa-solid cursor-pointer text-xl mt-[1px] fa-xmark"
+                ></i>
+              </div>
+                <DrawerTitle />
+              </DrawerHeader>
+              <DrawerBody padding={"0"} position="relative" overflow={"hidden"}>
+              <input
+                onChange={onChange}
+                value={search}
+                className=" mx-4 mt-6 border-[rgb(156,150,150)] px-4 outline-none w-[17rem] py-3
+                    rounded-lg border-2  bg-transparent text-white"
+                placeholder="Enter names or email address"
+                autoComplete="off"
+              ></input>
+              {
+                !loading && (
+                  <div className="flex h-[73vh]  pb-1check overflow-y-scroll styleScroll mt-6 flex-col ">
+                  {users.map((user, index) => {
+                    return (
+                      <div
+                        onClick={() => {
+                          accessChat(user._id);
+                          // closeTheTab();
+                        }}
+                        className="flex cursor-pointer px-4 hover:bg-[rgb(58,58,58)]  py-[6px]  items-center space-x-2"
+                        key={index}
+                      >
+                        <img
+                          className="w-12 rounded-full h-12"
+                          alt=""
+                          src={user.personal_info.profile_img}
+                        ></img>
+                        <p>{user.personal_info.fullname}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+                )
+              }
+              {!result &&  !loading && (
+                <div className="text-white h-[70vh] top-0 mx-20  absolute flex justify-center items-center">
+                  No result found
+                </div>
+              )}
+              </DrawerBody>
+              <DrawerFooter />
+            </DrawerContent>
+          </DrawerRoot>
+      </div>
+    </nav>
+  );
+}

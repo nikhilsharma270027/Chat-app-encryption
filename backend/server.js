@@ -11,6 +11,7 @@ import User from './Schemas/User.js';
 import chatRoute from "./routes/chatRoute.js";
 import path from "path";
 import { fileURLToPath } from "url";
+import { chatSocket } from './Config/chatSocket.js';
 let PORT = 3000;
 const uri = "mongodb+srv://nikhil:nikhil@chatapp.cwjik.mongodb.net/?retryWrites=true&w=majority&appName=chatapp";
 
@@ -44,7 +45,7 @@ app.use((req, res, next) => {
 });
 const io = new Server(server, {
   cors: {
-      origin: 'http://localhost:5173', // Allow requests from your React app
+      origin: 'http://localhost:5173', // Allow requests from your React app 
       methods: ['GET', 'POST'],
   },
 });
@@ -202,22 +203,22 @@ app.get("/getuser",async (req, res) => {
 //   });
 // });
 
-io.on("connection", (socket) => {
-  console.log("Connection to Socket.io");
-  socket.on("setup", (userData) => {
-      socket.join(userData._id);
-      console.log("User joined", userData.name)
-      socket.emit("connected");
-  });
+// io.on("connection", (socket) => {
+//   console.log("Connection to Socket.io");
+//   socket.on("setup", (userData) => {
+//       socket.join(userData._id);
+//       console.log("User joined", userData.name)
+//       socket.emit("connected");
+//   });
 
   // New Message triggered
 
   // socket.on()
 
 
-})
+// })
 
-
+chatSocket(server);
 // io.on("connection", (socket) => {
 //   console.log("A user connected");
 
@@ -258,6 +259,26 @@ app.use((error, req, res, next) => {
   const message = error.message || "Internal Server Error";
   res.status(status).send(message);
 });
+
+export const verifyJWT = (req, res, next) => {
+
+  const authHeader = req.header("authorization");
+  //authorization header value
+  const token = authHeader && authHeader.split(" ")[1]; //[ 'Bearer, ]
+
+  if(token == null) {
+      return res.status(401).json({ error: "No access Token" })
+  }
+
+  jwt.verify(token, process.env.SECRET_ACCESS_KEY, (err, user) => {
+      if(err){
+          return res.status(403).json({ error: "Access token is invalid" })
+      }
+
+      req.user = user.id // storing bcuz to know this is the user who is requesting service or routee 
+      next();
+  })
+}
 
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

@@ -6,10 +6,10 @@ const searchUser = async (req, res) => {
       ? {
           $or: [
             {
-              "personal_info.fullname": { $regex: req.query.search, $option: "i"},
+              "personal_info.fullname": { $regex: req.query.search, $options: "i"},
             },
             {
-              "personal_info.email": { $regex: req.query.search, $option: "i" },
+              "personal_info.email": { $regex: req.query.search, $options: "i" }, 
             },
           ],
         }

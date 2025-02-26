@@ -157,7 +157,7 @@
   ::-webkit-scrollbar-thumb:hover {
     background: #555; /* Slightly darker on hover */
   }
-  @layer components {
+  /* @layer components {
     .check{
         @apply border-2 border-yellow-500
     }
@@ -192,7 +192,7 @@
 
 .chatBox{
     scrollbar-width: none;   
-}
+} */
 
 
 /* Scrollbar styling */

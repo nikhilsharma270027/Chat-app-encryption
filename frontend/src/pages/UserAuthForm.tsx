@@ -18,7 +18,9 @@ const UserAuthForm = ({ type }: { type: "sign-in" | "sign-up" }) => {
         axios.post(import.meta.env.VITE_SERVER_DOMAIN + serverRoute, formData)
         .then(({data}) => {
             storeInSession("user", JSON.stringify(data));
+            localStorage.setItem("user", JSON.stringify(data));
             storeInSession("token", JSON.stringify(data.access_token));
+            localStorage.setItem("token", JSON.stringify(data.access_token));
             setUserAuth(data);
         })
         .catch(error => {
