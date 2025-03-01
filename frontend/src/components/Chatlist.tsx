@@ -1,23 +1,65 @@
 import ChatContext from '@/Context/chat/ChatContext'
 import MessageContext from '@/Context/message/MessageContext';
-import React, { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { toaster } from './ui/toaster';
 import axios from 'axios';
 import Profile from './Profile';
-import { Skeleton } from './ui/skeleton';
+import {  SkeletonCircle, SkeletonText} from './ui/skeleton';
+import { Box, VStack } from "@chakra-ui/react"
+const sampleRecentChats = [
+  {
+    _id: "65f1a1c5b123456789abcdef1",
+    chatname: "Developers Hub",
+    isGroupChat: true,
+    users: [
+      { user: "65f1a1c5b123456789abc001", unseenMsg: 2 }, // Alice
+      { user: "65f1a1c5b123456789abc002", unseenMsg: 0 }, // Bob
+      { user: "65f1a1c5b123456789abc003", unseenMsg: 1 }, // Charlie
+    ],
+    admin: "65f1a1c5b123456789abc001", // Alice is admin
+    latestMessage: "65f1a1c5b123456789abc101", // ID of the last message
+    profilePic:
+      "https://api.dicebear.com/6.x/notionists-neutral/svg?seed=Felix",
+    createdAt: "2025-02-20T10:00:00Z",
+    updatedAt: "2025-02-20T10:10:00Z",
+  },
+  {
+    _id: "65f1a1c5b123456789abcdef2",
+    chatname: "Project X",
+    isGroupChat: true,
+    users: [
+      { user: "65f1a1c5b123456789abc001", unseenMsg: 3 }, // Alice
+      { user: "65f1a1c5b123456789abc004", unseenMsg: 0 }, // David
+      { user: "65f1a1c5b123456789abc005", unseenMsg: 0 }, // Eve
+    ],
+    admin: "65f1a1c5b123456789abc004", // David is admin
+    latestMessage: "65f1a1c5b123456789abc102", // ID of the last message
+    profilePic:
+      "https://cdn6.aptoide.com/imgs/1/2/2/1221bc0bdd2354b42b293317ff2adbcf_icon.png",
+    createdAt: "2025-02-19T09:00:00Z",
+    updatedAt: "2025-02-19T09:40:00Z",
+  },
+];
+
+
+
+
+
+
+
 const token = localStorage.getItem("token");
-import {
-  // Skeleton,
-  SkeletonCircle,
-  SkeletonText,
-} from "@/components/ui/skeleton
+// import {
+//   // Skeleton,
+//   SkeletonCircle,
+//   SkeletonText,
+// } from "@/components/ui/skeleton
 let currentChat;
 let chats;
 
 const Chatlist = (props: any) => {
     const context = useContext(ChatContext);
     const contextMsg = useContext(MessageContext);
-    const { socket, settoggleSearch } = props;
+    const { socket, settoggleSearch, setenableChat, setenableChatlist } = props;
     const [groupsView, setgroupsView] =  useState(false);
     // const [recentChats, setreactChats] = useState([])
     const { decryption } = contextMsg;
@@ -201,24 +243,125 @@ const Chatlist = (props: any) => {
     }
   };
 
-  // Counting unseen msgs //
-  const countMsgs = (members: any) => {
-    let mssgCount = 0;
-    members.forEach((member: any) => {
+ // Function to count unseen messages for the logged-in user
+const countMsgs = (members: any) => {
+  let mssgCount = 0;
+  
+  members.forEach((member: any) => {
+    // Check if member.user exists before accessing its properties
+    if (member?.user?._id) {
       let memberId = member.user._id.toString();
-      if(memberId === logUser._id) {
-        mssgCount = member.unseenMsg;
+      
+      // Compare the member's ID with the logged-in user's ID
+      if (memberId === logUser._id) {
+        mssgCount = member.unseenMsg ?? 0; // Default to 0 if unseenMsg is undefined
       }
-    });
-    return mssgCount;
+    } else {
+      console.warn("Invalid member object:", member); // Log invalid entries
+    }
+  });
+
+  return mssgCount;
+};
+
+
+ //  fetching group chat //
+ const setGroupChat = (element: any) => {
+  if (chatroom._id !== element._id) {
+    if (window.innerWidth < 768) {
+      setenableChatlist(false);
+      setenableChat(true);
+    }
+
+    accessGroupChat(element._id);
+    element.dummy = true;
+    setrecentChats(
+      recentChats.map((chat) => {
+        if (chat._id === element._id) {
+          chat.users = chat.users.map((members: any) => {
+            if (members.user._id === logUser._id) {
+              members.unseenMsg = 0;
+              return members;
+            } else {
+              return members;
+            }
+          });
+
+          return chat;
+        } else {
+          return chat;
+        }
+      })
+    );
   }
+};
+
+//fetching single chat //
+const setSingleChat = (element: any) => {
+  if (element._id !== chatroom._id) {
+    if (window.innerWidth < 768) {
+      setenableChatlist(false);
+      setenableChat(true);
+    }
+
+    setchatroom(element);
+    DissmissCount(element._id);
+    setrecentChats(
+      recentChats.map((chat) => {
+        if (chat._id === element._id) {
+          chat.users = chat.users.map((members: any) => {
+            if (members.user._id === logUser._id) {
+              members.unseenMsg = 0;
+              return members;
+            } else {
+              return members;
+            }
+          });
+
+          return chat;
+        } else {
+          return chat;
+        }
+      })
+    );
+  }
+};
+
 
   const changeListView = (value: any) => {
     setgroupsView(value)
   }
+
+  // decrypting latestMessage of chats in recentchatlist //
+  const filterMessage = (encryptedMessage: any, isGroup: any, user: any) => {
+    let message = "new"; //decryption(encryptedMessage); // decrypting the message
+    let compressedMessage; // will store the formmated message
+    if (isGroup) {
+      let name = user._id === logUser.user._id ? "you" : user.name;
+      // Replace the logged-in user's name with "you" for better readability
+      compressedMessage = message.replace(logUser.name, "you");
+
+      // Format the message as: "SenderName : message"
+      let finalmessage = name + " : " + compressedMessage;
+
+      // Shorten the message if it's longer than 26 characters
+      return finalmessage.length > 26
+        ? finalmessage.slice(0, 27) + ".."
+        : finalmessage;
+      } else {
+      // If it's a personal chat, just shorten the message if necessary
+      compressedMessage =
+        message.length > 26 ? message.slice(0, 27) + ".." : message;
+      }
+
+      // Return the formatted message
+      console.log(message)
+      console.log(compressedMessage)
+      return compressedMessage;
+      };
   
   return (
-    <div className="bg-[rgb(36,36,36)]   text-white w-full xs:w-96 md:w-80  xl:w-[25%] h-[100%] flex flex-col space-y-2">
+    <div className="bg-[rgb(36,36,36)]   text-white w-full xs:w-96 md:w-80  xl:w-[25%] h-[100%] flex flex-col space-y-2 rounded-2xl">
       <div className="flex justify-between h-[10vh] px-7 mb-2 pr-10 md:px-6  items-center  ">
         <div className="flex space-x-2 items-center">
           <p className="font-semibold hidden md:flex font-[calibri] text-3xl ">
@@ -264,258 +407,161 @@ const Chatlist = (props: any) => {
           Groups
         </p>
       </div>
+
       {chatlistLoading && (
-        <div className="flex h-[79vh] overflow-y-scroll chatBox  items-center flex-col space-y-2">
-          <div className=" relative  w-72 2xl:w-80  flex space-x-2 items-center pt-4 ">
-            <SkeletonCircle
-              size="14"
-              startColor="rgb(46,46,46)"
-              endColor="rgb(56,56,56)"
-            />
-            <div className="space-y-2 ">
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                width={`${
-                  window.innerWidth < 768
-                    ? "14rem"
-                    : window.innerWidth < 1536
-                    ? "13rem"
-                    : "15rem"
-                }`}
-                height="10px"
-              />
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                height="10px"
-              />
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                height="10px"
-              />
+        <div className='h-[79vh] pt-4 overflow-y-scroll chatBox items-center flex-col space-y-2'>
+          {
+            sampleRecentChats.length > 0 && 
+                sampleRecentChats.map((element: any) =>{
+                  if(element.isGroupChat) {
+                    return (
+                        <div key={element._id} onClick={(e) => console.log(e)}
+                          className={`flex hover:bg-[rgb(44,44,44)] cursor-pointer 
+                              ${
+                                element._id === chatroom._id
+                               ? "bg-[rgb(27,27,27)] border-l-2  border-[rgb(36,141,97)]"
+                               : "bg-[rgb(36,36,36)] "
+                              }
+                            px-4 justify-center  w-full text-white `}
+                        >
+
+                          <div key={element._id}
+                            className="flex space-x-2 items-center  md:px-0 py-2 w-72 2xl:w-80  relative border-b-[1px] border-[rgb(42,42,42)]"
+                          >
+                              <img
+                                alt=""
+                                className="w-12 h-12 2xl:w-[3.2rem] 2xl:h-[3.2rem] rounded-[50%]"
+                                src={element.profilePic}
+                              ></img>
+                              <div>
+                                <div className='flex justify-between'>
+                                  <p className='text-base font-semibold'>
+                                    {element.chatname.length > 25
+                                      ? element.chatname.slice(0, 25) + "..."
+                                      : element.chatname 
+                                    }
+                                  </p>
+                                </div>
+
+                                <div className="flex justify-between">
+                                  <p
+                                    className={`${
+                                      countMsgs(element.users) > 0
+                                        ? "text-[rgb(223,223,223)]"
+                                        : "text-[rgb(146,145,148)]"
+                                    } text-sm`}
+                                  >
+                                    {/* {filterMessage(
+                                      element.latestMessage.content,
+                                      true,
+                                      element.latestMessage.sender
+                                    )} */}
+                                  </p>
+                                </div>
+                              </div>
+                              {countMsgs(element.users) > 0 && (
+                                  <p
+                                    className="bg-[rgb(197,73,69)] absolute right-2 top-6 rounded-full font-bold flex justify-center 
+                              items-center text-[0.7rem] h-5 w-5"
+                                  >
+                                    {countMsgs(element.users) > 99
+                                      ? "99+"
+                                      : countMsgs(element.users)}
+                                  </p>
+                                )}
+                          </div>
+                        </div>
+                    );
+                  } else if(!groupsView) {
+                    if (element.latestMessage) {
+                      return (
+                        <div
+                          onClick={() => {
+                            setSingleChat(element);
+                          }}
+                          className={`flex ${
+                            element._id === chatroom._id
+                              ? "bg-[rgb(27,27,27)] border-l-2  border-[rgb(36,141,97)]"
+                              : "bg-[rgb(36,36,36)] "
+                          } 
+                              cursor-pointer w-full justify-center hover:bg-[rgb(44,44,44)]   px-4   text-white `}
+                          key={element._id}
+                        >
+                          <div className="flex space-x-2 py-2 items-center  w-72 2xl:w-80   relative  border-b-[1px] border-[rgb(42,42,42)]">
+                            <img
+                              alt=""
+                              className="w-12 h-12 2xl:w-[3.2rem] 2xl:h-[3.2rem] rounded-[50%]"
+                              src={checkUserAvtar(
+                                element.latestMessage.sender,
+                                element
+                              )}
+                            ></img>
+                            <div>
+                              <div className="flex font-semibold  justify-between">
+                                <p className="text-base">
+                                  {checkUser(element.latestMessage.sender, element)}
+                                </p>
+                              </div>
+                              <div className="flex justify-between">
+                                <p
+                                  className={`${
+                                    countMsgs(element.users) > 0
+                                      ? "text-white"
+                                      : "text-[rgb(146,145,148)]"
+                                  } text-sm`}
+                                >
+                                  {/* {filterMessage(element.latestMessage.content)} */}
+                                </p>
+                              </div>
+                            </div>
+                            {countMsgs(element.users) > 0 && (
+                              <p
+                                className="bg-[rgb(197,73,69)] absolute right-2 top-6 rounded-full font-bold flex justify-center 
+                           items-center text-[0.7rem] h-5 w-5"
+                              >
+                                {countMsgs(element.users) > 99
+                                  ? "99+"
+                                  : countMsgs(element.users)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    } else {
+                      return <div key={""}></div>;
+                    }
+                  } else {
+                    return <div key={element._id}></div>;
+                  }
+                })}
+              {recentChats.length === 0 && (
+                <div className="h-96 text-[rgb(111,111,111)] flex items-center text-lg">
+                  No recent chats
+                </div>
+              )}
             </div>
-          </div>
-          <div className=" relative  w-72 2xl:w-80  flex space-x-2 items-center pt-4 ">
-            <SkeletonCircle
-              size="14"
-              startColor="rgb(46,46,46)"
-              endColor="rgb(56,56,56)"
-            />
-            <div className="space-y-2 ">
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                width={`${
-                  window.innerWidth < 768
-                    ? "14rem"
-                    : window.innerWidth < 1536
-                    ? "13rem"
-                    : "15rem"
-                }`}
-                height="10px"
-              />
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                height="10px"
-              />
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                height="10px"
-              />
-            </div>
-          </div>
-          <div className=" relative  w-72 2xl:w-80  flex space-x-2 items-center pt-4 ">
-            <SkeletonCircle
-              size="14"
-              startColor="rgb(46,46,46)"
-              endColor="rgb(56,56,56)"
-            />
-            <div className="space-y-2 ">
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                width={`${
-                  window.innerWidth < 768
-                    ? "14rem"
-                    : window.innerWidth < 1536
-                    ? "13rem"
-                    : "15rem"
-                }`}
-                height="10px"
-              />
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                height="10px"
-              />
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                height="10px"
-              />
-            </div>
-          </div>
-          <div className=" relative  w-72 2xl:w-80  flex space-x-2 items-center pt-4 ">
-            <SkeletonCircle
-              size="14"
-              startColor="rgb(46,46,46)"
-              endColor="rgb(56,56,56)"
-            />
-            <div className="space-y-2 ">
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                width={`${
-                  window.innerWidth < 768
-                    ? "14rem"
-                    : window.innerWidth < 1536
-                    ? "13rem"
-                    : "15rem"
-                }`}
-                height="10px"
-              />
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                height="10px"
-              />
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                height="10px"
-              />
-            </div>
-          </div>
-          <div className=" relative  w-72 2xl:w-80  flex space-x-2 items-center pt-4 ">
-            <SkeletonCircle
-              size="14"
-              startColor="rgb(46,46,46)"
-              endColor="rgb(56,56,56)"
-            />
-            <div className="space-y-2 ">
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                width={`${
-                  window.innerWidth < 768
-                    ? "14rem"
-                    : window.innerWidth < 1536
-                    ? "13rem"
-                    : "15rem"
-                }`}
-                height="10px"
-              />
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                height="10px"
-              />
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                height="10px"
-              />
-            </div>
-          </div>
-          <div className=" relative  w-72 2xl:w-80  flex space-x-2 items-center pt-4 ">
-            <SkeletonCircle
-              size="14"
-              startColor="rgb(46,46,46)"
-              endColor="rgb(56,56,56)"
-            />
-            <div className="space-y-2 ">
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                width={`${
-                  window.innerWidth < 768
-                    ? "14rem"
-                    : window.innerWidth < 1536
-                    ? "13rem"
-                    : "15rem"
-                }`}
-                height="10px"
-              />
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                height="10px"
-              />
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                height="10px"
-              />
-            </div>
-          </div>
-          <div className=" relative  w-72 2xl:w-80  flex space-x-2 items-center pt-4 ">
-            <SkeletonCircle
-              size="14"
-              startColor="rgb(46,46,46)"
-              endColor="rgb(56,56,56)"
-            />
-            <div className="space-y-2 ">
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                width={`${
-                  window.innerWidth < 768
-                    ? "14rem"
-                    : window.innerWidth < 1536
-                    ? "13rem"
-                    : "15rem"
-                }`}
-                height="10px"
-              />
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                height="10px"
-              />
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                height="10px"
-              />
-            </div>
-          </div>
-          <div className=" relative  w-72 2xl:w-80  flex space-x-2 items-center pt-4 ">
-            <SkeletonCircle
-              size="14"
-              startColor="rgb(46,46,46)"
-              endColor="rgb(56,56,56)"
-            />
-            <div className="space-y-2 ">
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                width={`${
-                  window.innerWidth < 768
-                    ? "14rem"
-                    : window.innerWidth < 1536
-                    ? "13rem"
-                    : "15rem"
-                }`}
-                height="10px"
-              />
-              <SkeletonText
-                startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                height="10px"
-              />
-              <SkeletonText
-                // startColor="rgb(46,46,46)"
-                endColor="rgb(56,56,56)"
-                height="10px"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+          )}
+
+      
+
+    {/* 
+      {chatlistLoading && (
+          <VStack spacing={4} className="h-[79vh] overflow-y-scroll chatBox items-center">
+            {[...Array(8)].map((_, index) => (
+              <Box key={index} className="relative w-72 2xl:w-80 flex space-x-2 items-center pt-4">
+                <SkeletonCircle size="14" />
+                <VStack spacing={2} align="start">
+                  <SkeletonText noOfLines={1} skeletonHeight="10px" w={{
+                    base: "14rem",
+                    md: "13rem",
+                    xl: "15rem",
+                  }} />
+                  <SkeletonText noOfLines={2} skeletonHeight="10px" w="full" />
+                </VStack>
+              </Box>
+            ))}
+          </VStack>
+        )} */}
     </div> 
   )
 }

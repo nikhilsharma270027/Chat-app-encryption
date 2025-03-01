@@ -1,4 +1,5 @@
 
+import Chat from "@/components/Chat";
 import Chatlist from "@/components/Chatlist";
 import Navbar from "@/components/Navbar";
 import ChatContext from "@/Context/chat/ChatContext";
@@ -13,7 +14,7 @@ export const ChatPage = () => {
     const [profileView, setprofileView] = useState(false);
     const [details, setdetails] = useState({});
     const context = useContext(ChatContext);
-    const [toggleSeqarch, settoggleSearch] = useState(false);
+    const [toggleSearch, settoggleSearch] = useState(false);
     const { chatroom, logUser, setlogUser, setchatroom} = context;
     const [loading, setloading] = useState(true);
     const [manageScreen, setmanageScreen] = useState(false);
@@ -51,6 +52,26 @@ export const ChatPage = () => {
     const toggleLoading = () => {
       setloading(false)
     }
+
+      //toggling chat details section//
+  const toggleProfileView = (value: any) => {
+    setprofileView(value);
+    if (!value) {
+      setdetails({});
+      return;
+    }
+
+    if (chatroom.isGroupChat) {
+      setdetails(chatroom);
+    } else {
+      if (logUser._id === chatroom.users[0].user._id) {
+        setdetails(chatroom.users[1].user);
+      } else {
+        setdetails(chatroom.users[0].user);
+      }
+    }
+  };
+
   return (
     <div>
       <div
@@ -83,7 +104,16 @@ export const ChatPage = () => {
           <Chatlist 
             socket={socket}
             settoggleSearch={settoggleSearch}
-          />   
+          />  
+          {enableChat && (
+            <Chat 
+              socket={socket}
+              details={profileView}
+              toggleProfileView={toggleProfileView}
+              enableChat={enableChat}
+              setenableChatlist={setenableChatlist}
+            />
+          )} 
       </div>
     </div>
   )

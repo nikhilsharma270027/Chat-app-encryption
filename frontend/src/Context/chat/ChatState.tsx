@@ -2,13 +2,14 @@ import { useState, ReactNode } from "react";
 import ChatContext from "./ChatContext";
 import axios from "axios";
 import { toaster } from "@/components/ui/toaster"
+import sampleRecentChats from "@/common/Data";
 
 const url = import.meta.env.VITE_SERVER_DOMAIN;
 
 const ChatState = (props: any) => {
     const [logUser, setlogUser] = useState<any>({});
     const [chatroom, setchatroom] = useState<any>({});
-    const [recentChats, setrecentChats] = useState<any[]>([]);
+    const [recentChats, setrecentChats] = useState<any[]>(sampleRecentChats);
     const [groupPic, setgroupPic] = useState<string>("");
     const [groupName, setgroupName] = useState<string>("");
     const [groupMessages, setgroupMessages] = useState<any[]>([]);
