@@ -67,6 +67,49 @@ export const chatSocket = (socket) => {
         });
       
 
+        // on creating group //
+
+    socket.on("group_created", (group) => {
+      group.users.forEach((members) => {
+        if (members.user._id == group.admin._id) return;
+        socket.in(members.user._id).emit("created_group", group);
+      });
+    });
+
+    //update user exist in group or not //
+
+    socket.on("member_status", (data) => {
+      data.users.forEach((members) => {
+        socket.in(members.user).emit("groupRemoved", data);
+      });
+    });
+
+    // on changing group image //
+
+    socket.on("changed_groupImage", (data) => {
+      data.chat.users.forEach((members) => {
+        if (members.user._id == data.logUser._id) return;
+        socket.in(members.user._id).emit("toggleImage", data);
+      });
+    });
+
+    // on changing group name //
+
+    socket.on("changed_groupName", (data) => {
+      data.chat.users.forEach((members) => {
+        if (members.user._id == data.logUser._id) return;
+        socket.in(members.user._id).emit("toggleName", data);
+      });
+    });
+
+    //update users list while removing or adding //
+
+    socket.on("change_users", (data) => {
+      data.group.users.forEach((members) => {
+        if (members.user._id == data.group.admin._id) return;
+        socket.in(members.user._id).emit("updateUsers", data);
+      });
+    });
 
         // Toggle typing
         socket.on("toggleTyping", (data) => {

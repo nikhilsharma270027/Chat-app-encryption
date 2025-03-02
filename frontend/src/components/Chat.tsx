@@ -1,6 +1,7 @@
 import ChatContext from "@/Context/chat/ChatContext";
 import React, { useContext } from "react";
 import SingleChat from "./SingleChat";
+import GroupChat from "./GroupChat";
 
 export default function Chat(props: any) {
   const context = useContext(ChatContext);
@@ -16,7 +17,13 @@ export default function Chat(props: any) {
     <>
       {chatroom.users ? (
         chatroom.isgroupChat ? (
-          ""
+          <GroupChat 
+            socket={socket}
+            toggleProfileView={toggleProfileView}
+            details={details}
+            setenableChatlist={setenableChatlist}
+            setenableChat={setenableChat}
+          />
         ) : (
           <SingleChat
             socket={socket}
@@ -31,7 +38,7 @@ export default function Chat(props: any) {
           <div className="flex  flex-col  justify-center items-center  rounded-xl px-4  ">
             <img
               alt=""
-              className=" w-[22rem]   xl:w-[30rem]  2xl:w-[35rem] "
+              className=" w-[22rem] mt-24   xl:w-[30rem]  2xl:w-[35rem] "
               src={
                 "https://res.cloudinary.com/dynjwlpl3/image/upload/v1674985395/Chat-app/.._hqgjqe.png"
               }

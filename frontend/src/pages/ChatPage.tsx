@@ -2,6 +2,7 @@
 import Chat from "@/components/Chat";
 import Chatlist from "@/components/Chatlist";
 import Navbar from "@/components/Navbar";
+import Profile from "@/components/Profile";
 import ChatContext from "@/Context/chat/ChatContext";
 import { useContext, useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom";
@@ -114,6 +115,13 @@ export const ChatPage = () => {
               setenableChatlist={setenableChatlist}
             />
           )} 
+           {/* {profileView && !manageScreen && (
+            <Profile
+              // toggleProfileView={toggleProfileView}
+              // socket={socket}
+              // Profile={details}
+            />
+          )} */}
       </div>
     </div>
   )

@@ -6,40 +6,40 @@ import axios from 'axios';
 import Profile from './Profile';
 import {  SkeletonCircle, SkeletonText} from './ui/skeleton';
 import { Box, VStack } from "@chakra-ui/react"
-const sampleRecentChats = [
-  {
-    _id: "65f1a1c5b123456789abcdef1",
-    chatname: "Developers Hub",
-    isGroupChat: true,
-    users: [
-      { user: "65f1a1c5b123456789abc001", unseenMsg: 2 }, // Alice
-      { user: "65f1a1c5b123456789abc002", unseenMsg: 0 }, // Bob
-      { user: "65f1a1c5b123456789abc003", unseenMsg: 1 }, // Charlie
-    ],
-    admin: "65f1a1c5b123456789abc001", // Alice is admin
-    latestMessage: "65f1a1c5b123456789abc101", // ID of the last message
-    profilePic:
-      "https://api.dicebear.com/6.x/notionists-neutral/svg?seed=Felix",
-    createdAt: "2025-02-20T10:00:00Z",
-    updatedAt: "2025-02-20T10:10:00Z",
-  },
-  {
-    _id: "65f1a1c5b123456789abcdef2",
-    chatname: "Project X",
-    isGroupChat: true,
-    users: [
-      { user: "65f1a1c5b123456789abc001", unseenMsg: 3 }, // Alice
-      { user: "65f1a1c5b123456789abc004", unseenMsg: 0 }, // David
-      { user: "65f1a1c5b123456789abc005", unseenMsg: 0 }, // Eve
-    ],
-    admin: "65f1a1c5b123456789abc004", // David is admin
-    latestMessage: "65f1a1c5b123456789abc102", // ID of the last message
-    profilePic:
-      "https://cdn6.aptoide.com/imgs/1/2/2/1221bc0bdd2354b42b293317ff2adbcf_icon.png",
-    createdAt: "2025-02-19T09:00:00Z",
-    updatedAt: "2025-02-19T09:40:00Z",
-  },
-];
+// const sampleRecentChats = [
+//   {
+//     _id: "65f1a1c5b123456789abcdef1",
+//     chatname: "Developers Hub",
+//     isGroupChat: true,
+//     users: [
+//       { user: "65f1a1c5b123456789abc001", unseenMsg: 2 }, // Alice
+//       { user: "65f1a1c5b123456789abc002", unseenMsg: 0 }, // Bob
+//       { user: "65f1a1c5b123456789abc003", unseenMsg: 1 }, // Charlie
+//     ],
+//     admin: "65f1a1c5b123456789abc001", // Alice is admin
+//     latestMessage: "65f1a1c5b123456789abc101", // ID of the last message
+//     profilePic:
+//       "https://api.dicebear.com/6.x/notionists-neutral/svg?seed=Felix",
+//     createdAt: "2025-02-20T10:00:00Z",
+//     updatedAt: "2025-02-20T10:10:00Z",
+//   },
+//   {
+//     _id: "65f1a1c5b123456789abcdef2",
+//     chatname: "Project X",
+//     isGroupChat: true,
+//     users: [
+//       { user: "65f1a1c5b123456789abc001", unseenMsg: 3 }, // Alice
+//       { user: "65f1a1c5b123456789abc004", unseenMsg: 0 }, // David
+//       { user: "65f1a1c5b123456789abc005", unseenMsg: 0 }, // Eve
+//     ],
+//     admin: "65f1a1c5b123456789abc004", // David is admin
+//     latestMessage: "65f1a1c5b123456789abc102", // ID of the last message
+//     profilePic:
+//       "https://cdn6.aptoide.com/imgs/1/2/2/1221bc0bdd2354b42b293317ff2adbcf_icon.png",
+//     createdAt: "2025-02-19T09:00:00Z",
+//     updatedAt: "2025-02-19T09:40:00Z",
+//   },
+// ];
 
 
 
@@ -53,8 +53,8 @@ const token = localStorage.getItem("token");
 //   SkeletonCircle,
 //   SkeletonText,
 // } from "@/components/ui/skeleton
-let currentChat;
-let chats;
+let currentChat: any;
+let chats: any;
 
 const Chatlist = (props: any) => {
     const context = useContext(ChatContext);
@@ -177,7 +177,7 @@ const Chatlist = (props: any) => {
 
 
     //finding  user two and returning name of userTwo (singlechat)
-    const checkUser = (user: String, chat: string) => {
+    const checkUser = (user: any, chat: any) => {
       try {
         if(recentChats.length) {
           if(user._id === logUser._id) {
@@ -411,11 +411,11 @@ const setSingleChat = (element: any) => {
       {chatlistLoading && (
         <div className='h-[79vh] pt-4 overflow-y-scroll chatBox items-center flex-col space-y-2'>
           {
-            sampleRecentChats.length > 0 && 
-                sampleRecentChats.map((element: any) =>{
+            recentChats.length > 0 && 
+                recentChats.map((element: any, index: any) =>{
                   if(element.isGroupChat) {
                     return (
-                        <div key={element._id} onClick={(e) => console.log(e)}
+                        <div key={element._id || `group-chat-${index}`} onClick={(e) => console.log(e)}
                           className={`flex hover:bg-[rgb(44,44,44)] cursor-pointer 
                               ${
                                 element._id === chatroom._id
@@ -485,7 +485,7 @@ const setSingleChat = (element: any) => {
                               : "bg-[rgb(36,36,36)] "
                           } 
                               cursor-pointer w-full justify-center hover:bg-[rgb(44,44,44)]   px-4   text-white `}
-                          key={element._id}
+                              key={element._id || `chat-${index}`}
                         >
                           <div className="flex space-x-2 py-2 items-center  w-72 2xl:w-80   relative  border-b-[1px] border-[rgb(42,42,42)]">
                             <img
@@ -528,10 +528,10 @@ const setSingleChat = (element: any) => {
                         </div>
                       );
                     } else {
-                      return <div key={""}></div>;
+                      return null;
                     }
                   } else {
-                    return <div key={element._id}></div>;
+                    return null;
                   }
                 })}
               {recentChats.length === 0 && (

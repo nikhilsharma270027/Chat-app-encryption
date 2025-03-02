@@ -21,5 +21,4 @@ const messageSchema = mongoose.Schema(
 );
 
 messageSchema.plugin(mongooseDateFormat);
-const message = mongoose.model("message", messageSchema);
-export default {message};
+export const Message = mongoose.model("message", messageSchema);

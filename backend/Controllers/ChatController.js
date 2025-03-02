@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import Message from "../Schemas/Message.js";
-import ChatBox from "../Schemas/chat-box.js";
+import { Message } from "../Schemas/Message.js";
+import { Chat}from "../Schemas/chat-box.js";
 import User from "../Schemas/User.js";
 
 export const saveMessage = async (req, res) => {
@@ -56,18 +56,17 @@ export const fetchMessages = async (req, res) => {
 // Function to fetch a list of recent chats for the logged-in user
 export const fetchChat = async (req, res) => {
   try {
-    const chats = await Chat.find({
-      // Fetching all chats with the logged-in user
-      users: { $elemMatch: { user: new mongoose.Types.ObjectId(req.user._id) } },
+    let chats = await Chat.find({
+      users: { $elemMatch: { user: new mongoose.Types.ObjectId(req.user) } },
     })
-      .populate({ path: "users.user" })
+      .populate({
+        path: "users",
+        populate: { path: "user" },
+      })
       .populate({
         path: "latestMessage",
         model: "message",
-        populate: {
-          path: "sender",
-          model: "user",
-        },
+        populate: { path: "sender", model: "user" },
       })
       .populate("admin")
       .sort("-updatedAt");
@@ -77,7 +76,7 @@ export const fetchChat = async (req, res) => {
     console.error("Error in fetching chats", error.message);
     res.status(500).send("Internal Server Error");
   }
-};
+};  
 
 // Function to fetch or create a single chat
 export const accessChat = async (req, res) => {
