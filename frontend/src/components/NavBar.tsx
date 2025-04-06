@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/drawer"
 import axios from "axios";
 
+
+
 export default function NavBar(props: any) {
   const [open, setOpen] = useState(false)
   const context = useContext(ChatContext);
@@ -24,7 +26,15 @@ export default function NavBar(props: any) {
   // const btnRef = React.useRef("");
   const { socket } = props;
   const [loading, setloading] = useState(false);
-  const [users, setusers] = useState([]);
+  interface User {
+    _id: string;
+    personal_info: {
+      profile_img: string;
+      fullname: string;
+    };
+  }
+  
+  const [users, setusers] = useState<User[]>([]);
   const [search, setsearch] = useState("");
   const [result, setResult] = useState(false);
 
@@ -135,9 +145,9 @@ export default function NavBar(props: any) {
                         <img
                           className="w-12 rounded-full h-12"
                           alt=""
-                          src={user.personal_info.profile_img}
+                          src={user?.personal_info.profile_img}
                         ></img>
-                        <p>{user.personal_info.fullname}</p>
+                        <p>{user?.personal_info.fullname}</p>
                       </div>
                     );
                   })}

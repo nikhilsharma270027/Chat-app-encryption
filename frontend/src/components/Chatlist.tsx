@@ -182,14 +182,14 @@ const Chatlist = (props: any) => {
         if(recentChats.length) {
           if(user._id === logUser._id) {
             if(user._id === chat.users[0]._id) {
-              let otherUser = chat.users[1].personal_info.fullname;
+              let otherUser = chat.users[1].name;
 
               if(otherUser.length > 23) {
                 return otherUser.slice(0, 23) + ".."
               }
               return otherUser;
             } else {
-              let string = chat.users[0].personal_info.fullname
+              let string = chat.users[0].name
               if (string.length > 23) {
                 return string.slice(0, 23) + "..";
               }

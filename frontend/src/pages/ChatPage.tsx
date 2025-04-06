@@ -117,9 +117,9 @@ export const ChatPage = () => {
           )} 
            {/* {profileView && !manageScreen && (
             <Profile
-              // toggleProfileView={toggleProfileView}
-              // socket={socket}
-              // Profile={details}
+              toggleProfileView={toggleProfileView}
+              socket={socket}
+              Profile={details}
             />
           )} */}
       </div>

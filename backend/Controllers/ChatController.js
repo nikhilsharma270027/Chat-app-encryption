@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { Message } from "../Schemas/Message.js";
-import { Chat}from "../Schemas/chat-box.js";
+import Chat from "../Schemas/chat-box.js";
 import User from "../Schemas/User.js";
 
 export const saveMessage = async (req, res) => {
@@ -103,7 +103,7 @@ export const accessChat = async (req, res) => {
         populate: {
           path: "sender",
           model: "user",
-          select: "personal_info.fullname personal_info.email personal_info.profile_img",
+          select: "name,email,avtar",
         },
       });
 
@@ -152,7 +152,7 @@ export const accessGroupChat = async (req, res) => {
                 populate: {
                     path: "sender",
                     model: "user",
-                    select: "personal_info.fullname personal_info.email personal_info.profile_img",
+                    select: "name,email,avtar",
                 },
             })
             .populate("admin", "-password");
@@ -304,7 +304,7 @@ export const changePic = async (req, res) => {
             await chat.save();
         } else {
             let user = await User.findById(Id);
-            user.personal_info.profile_img = pic;
+            user.avatar = pic;
             await user.save();
         }
         return res.status(200).json({ success: true, message: "Profile picture updated" });

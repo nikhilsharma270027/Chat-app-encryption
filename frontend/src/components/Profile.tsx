@@ -99,7 +99,7 @@ function Profile() {
   return (
     <div>
       <img ref={btnRef} title="Profile" alt="" onClick={onOpen} src={logUser.avatar} className="rounded-full cursor-pointer h-9 w-9" />
-      <DrawerRoot open={open} placement="end" onClose={onClose} finalFocusRef={btnRef}>
+      <DrawerRoot open={onOpen} placement="end" onClose={onClose} finalFocusRef={btnRef}>
         <DrawerBackdrop />
         <DrawerContent colorPalette="white" bg="rgb(36,36,36)">
           <DrawerHeader className="flex justify-between px-6">Profile</DrawerHeader>
